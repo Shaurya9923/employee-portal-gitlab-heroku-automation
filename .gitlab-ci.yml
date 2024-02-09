@@ -13,3 +13,17 @@ lint_test:
     when: always
     paths:
       - flake-report/
+  
+pytest:
+  stage: test
+  image: python:3.8.0-slim
+
+  before_script:
+    - pip install pytest-html
+    - pip install -r requirements.txt
+  script:
+    - pytest --html=pytest_reports/pytest_reports.html
+  artifacts:
+    when: always
+    paths:
+      - flake-report/
