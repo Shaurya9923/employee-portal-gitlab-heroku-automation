@@ -58,5 +58,5 @@ deploy_stage:
   script:
     - docker pull $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_REF_SLUG
     - docker tag $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_REF_SLUG $HEROKU_STAGING
-    - docker login -u _ -p $HEROKU_STAGING_API_KEY registry.heroku.com
+    - docker login -u shauryamehta9923@gmail.com -p $HEROKU_STAGING_API_KEY registry.heroku.com
     - docker push $HEROKU_STAGING
