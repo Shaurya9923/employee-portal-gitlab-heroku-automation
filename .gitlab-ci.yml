@@ -1,9 +1,12 @@
 stages:
   - test
   - build
+  - deloy_staging
 
 variables:
   CI_REGISTRY_IMAGE_DETAILS: registry.gitlab.com/shaurya_mehta/employee-portal
+  STAGING_APP: emp-portal-stagee
+  HEROKU_STAGING: "registry.herouku.com/$STAGING_APP/web"
   # $CI_REGISTRY_IMAGE = registry.gitlab.com/shaurya_mehta/employee-portal
 
 lint_test:
@@ -44,3 +47,16 @@ build:
     - docker build -t $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_REF_SLUG .
     - docker images
     - docker push $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_REF_SLUG
+
+deploy_stage:
+  image: docker-latest
+  services: 
+    - docker:dind
+  stage: deploy_staging
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker pull $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_REF_SLUG
+    - docker tag $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_REF_SLUG $HEROKU_STAGING
+    - docker login -u _ -p $HEROKU_STAGING_API_KEY registry.heroku.com
+    - docker push $HEROKU_STAGING
