@@ -6,7 +6,7 @@ stages:
 variables:
   CI_REGISTRY_IMAGE_DETAILS: registry.gitlab.com/shaurya_mehta/employee-portal
   STAGING_APP: emp-portal-stagee
-  HEROKU_STAGING: "registry.herouku.com/$STAGING_APP/web"
+  HEROKU_STAGING: "registry.heroku.com/$STAGING_APP/web"
   DOCKER_AUTH_CONFIG: '{ "auths": { "https://index.docker.io/v1/": { "auth": "$DOCKER_AUTH" } }}'
   # $CI_REGISTRY_IMAGE = registry.gitlab.com/shaurya_mehta/employee-portal
 
