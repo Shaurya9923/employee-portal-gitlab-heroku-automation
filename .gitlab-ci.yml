@@ -1,7 +1,7 @@
 stages:
   - test
   - build
-  - deloy staging
+  - deploy staging
 
 variables:
   CI_REGISTRY_IMAGE_DETAILS: registry.gitlab.com/shaurya_mehta/employee-portal
