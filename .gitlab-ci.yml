@@ -2,6 +2,7 @@ stages:
   - test
   - build
   - deploy staging
+  - automated testing
 
 variables:
   CI_REGISTRY_IMAGE_DETAILS: registry.gitlab.com/shaurya_mehta/employee-portal
@@ -63,3 +64,12 @@ deploy_stage:
     - docker push $HEROKU_STAGING
     - docker run --rm -e HEROKU_API_KEY=$HEROKU_STAGING_API_KEY wingrunr21/alpine-heroku-cli container:release web --app $STAGING_APP
     - echo "App deployed to stagig server at https://$STAGING_APP.herokuapp.com/"
+
+  
+test_stage:
+  image: alpine
+  stage: automated testing
+  before_script:
+    - apk --no-cache add curl
+  script:
+    - curl https://$STAGING_APP-65a788e78104.herokuapp.com/ | grep "Employee Data"
