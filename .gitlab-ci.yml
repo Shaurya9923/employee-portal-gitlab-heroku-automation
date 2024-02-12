@@ -49,9 +49,9 @@ build:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script: 
-    - docker build -t $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_REF_SLUG .
+    - docker build -t $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_SHORT_SHA .
     - docker images
-    - docker push $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_REF_SLUG
+    - docker push $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_SHORT_SHA
 
 deploy_stage:
   image: docker:latest
@@ -64,8 +64,8 @@ deploy_stage:
   before_script: 
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker pull $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_REF_SLUG
-    - docker tag  $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_REF_SLUG $HEROKU_STAGING
+    - docker pull $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_SHORT_SHA
+    - docker tag  $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_SHORT_SHA $HEROKU_STAGING
     - docker login -u _ -p $HEROKU_STAGING_API_KEY registry.heroku.com
     - docker push $HEROKU_STAGING
     - docker run --rm -e HEROKU_API_KEY=$HEROKU_STAGING_API_KEY wingrunr21/alpine-heroku-cli container:release web --app $STAGING_APP
@@ -91,8 +91,8 @@ deploy_production:
   before_script: 
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker pull $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_REF_SLUG
-    - docker tag  $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_REF_SLUG $HEROKU_PRODUCTION
+    - docker pull $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_SHORT_SHA
+    - docker tag  $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_SHORT_SHA $HEROKU_PRODUCTION
     - docker login -u _ -p $HEROKU_PRODUCTION_API_KEY registry.heroku.com
     - docker push $HEROKU_PRODUCTION
     - docker run --rm -e HEROKU_API_KEY=$HEROKU_PRODUCTION_API_KEY wingrunr21/alpine-heroku-cli container:release web --app $PRODUCTION_APP
