@@ -1,6 +1,8 @@
 stages:
   - test
   - build
+  - deploy feature
+  - automated feature testing
   - deploy staging
   - automated testing
   - deploy production
@@ -49,24 +51,69 @@ build:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script: 
-    - docker build -t $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_REF_SLUG .
+    - docker build -t $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_SHORT_SHA .
     - docker images
-    - docker push $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_REF_SLUG
+    - docker push $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_SHORT_SHA
+
+deploy_feature:
+  image: docker:latest
+  services:
+    - docker:dind
+  stage: deploy feature
+  environment: 
+    name: review_feature_deploy/$CI_COMMIT_REF_NAME
+    url: https://$CI_ENVIRONMENT_SLUG.herokuapp.com/
+  before_script: 
+    - export FEATURE_APP="$CI_ENVIRONMENT_SLUG"
+    - export HEROKU_FEATURE="registry.heroku.com/$FEATURE_APP/web"
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - echo "FEATURE_APP=$CI_ENVIRONMENT_SLUG" >> deploy_feature.env
+    - docker pull $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_SHORT_SHA
+    - docker tag  $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_SHORT_SHA $HEROKU_FEATURE
+    - docker run --rm -e HEROKU_API_KEY=$HEROKU_STAGING_API_KEY wingrunr21/alpine-heroku-cli create $FEATURE_APP
+    - docker login -u _ -p $HEROKU_STAGING_API_KEY registry.heroku.com
+    - docker push $HEROKU_FEATURE
+    - docker run --rm -e HEROKU_API_KEY=$HEROKU_STAGING_API_KEY wingrunr21/alpine-heroku-cli container:release web --app $FEATURE_APP
+    - echo "App deployed to feature server at https://$FEATURE_APP.herokuapp.com/"
+  artifacts:
+    reports:
+      dotenv: deploy_feature.env
+  only:
+    - /^feature-.*$/
+
+test_feature:
+  image: alpine
+  stage: automated feature testing
+  before_script:
+    - apk --no-cache add curl
+  script:
+    - curl https://$STAGING_APP-65a788e78104.herokuapp.com/ | grep "Employee Data"
+  dependencies:
+    - deploy_feature
+  only:
+    - /^feature-.*$/
+  
 
 deploy_stage:
   image: docker:latest
   services:
     - docker:dind
   stage: deploy staging
+  environment: 
+    name: staging
+    url: https://emp-portal-stagee-65a788e78104.herokuapp.com/
   before_script: 
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker pull $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_REF_SLUG
-    - docker tag  $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_REF_SLUG $HEROKU_STAGING
+    - docker pull $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_SHORT_SHA
+    - docker tag  $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_SHORT_SHA $HEROKU_STAGING
     - docker login -u _ -p $HEROKU_STAGING_API_KEY registry.heroku.com
     - docker push $HEROKU_STAGING
     - docker run --rm -e HEROKU_API_KEY=$HEROKU_STAGING_API_KEY wingrunr21/alpine-heroku-cli container:release web --app $STAGING_APP
     - echo "App deployed to staging server at https://$STAGING_APP.herokuapp.com/"
+  only:
+    - main
 
   
 test_stage:
@@ -76,17 +123,22 @@ test_stage:
     - apk --no-cache add curl
   script:
     - curl https://$STAGING_APP-65a788e78104.herokuapp.com/ | grep "Employee Data"
+  only:
+    - main
 
 deploy_production:
   image: docker:latest
   services:
     - docker:dind
   stage: deploy production
+  environment: 
+    name: production
+    url: https://emp-portal-production2-1be84037576a.herokuapp.com/
   before_script: 
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker pull $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_REF_SLUG
-    - docker tag  $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_REF_SLUG $HEROKU_PRODUCTION
+    - docker pull $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_SHORT_SHA
+    - docker tag  $CI_REGISTRY_IMAGE_DETAILS/employee-image:$CI_COMMIT_SHORT_SHA $HEROKU_PRODUCTION
     - docker login -u _ -p $HEROKU_PRODUCTION_API_KEY registry.heroku.com
     - docker push $HEROKU_PRODUCTION
     - docker run --rm -e HEROKU_API_KEY=$HEROKU_PRODUCTION_API_KEY wingrunr21/alpine-heroku-cli container:release web --app $PRODUCTION_APP
