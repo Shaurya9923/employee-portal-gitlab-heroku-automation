@@ -61,7 +61,7 @@ deploy_feature:
     - docker:dind
   stage: deploy feature
   environment: 
-    name: review/$CI_COMMIT_SHORT_SHA
+    name: review_feature_deploy/$CI_COMMIT_REF_NAME
     url: https://$CI_ENVIRONMENT_SLUG.herokuapp.com/
   before_script: 
     - export FEATURE_APP="$CI_ENVIRONMENT_SLUG"
@@ -88,7 +88,7 @@ test_feature:
   before_script:
     - apk --no-cache add curl
   script:
-    - curl https://review-f3cd0369-1y959g-9635057ffa50.herokuapp.com/ | grep "Employee Data"
+    - curl https://$FEATURE_APP-65a788e78104.herokuapp.com/ | grep "Employee Data"
   dependencies:
     - deploy_feature
   only:
