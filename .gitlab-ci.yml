@@ -88,7 +88,7 @@ test_feature:
   before_script:
     - apk --no-cache add curl
   script:
-    - curl https://$FEATURE_APP-65a788e78104.herokuapp.com/ | grep "Employee Data"
+    - curl https://review-f3cd0369-1y959g-9635057ffa50.herokuapp.com/ | grep "Employee Data"
   dependencies:
     - deploy_feature
   only:
