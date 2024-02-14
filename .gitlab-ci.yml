@@ -91,7 +91,7 @@ stop_feature:
   variables:
     GIT_STRATEGY: none
   environment:
-    name: review/$CI_COMMIT_REF_NAME
+    name: review_feature_deploy/$CI_COMMIT_REF_NAME
     action: stop
   before_script: 
     - export FEATURE_APP="$CI_ENVIRONMENT_SLUG"
