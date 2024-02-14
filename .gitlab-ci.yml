@@ -63,6 +63,7 @@ deploy_feature:
   environment: 
     name: review_feature_deploy/$CI_COMMIT_REF_NAME
     url: https://$CI_ENVIRONMENT_SLUG.herokuapp.com/
+    on_stop: stop_feature
   before_script: 
     - export FEATURE_APP="$CI_ENVIRONMENT_SLUG"
     - export HEROKU_FEATURE="registry.heroku.com/$FEATURE_APP/web"
@@ -81,6 +82,24 @@ deploy_feature:
       dotenv: deploy_feature.env
   only:
     - /^feature-.*$/
+
+stop_feature:
+  image: docker:latest
+  services:
+    - docker:dind
+  stage: deploy feature
+  variables:
+    GIT_STRATEGY: none
+  environment:
+    name: review/$CI_COMMIT_REF_NAME
+    action: stop
+  before_script: 
+    - export FEATURE_APP="$CI_ENVIRONMENT_SLUG"
+  script:
+    - docker run --rm -e HEROKU_API_KEY=$HEROKU_STAGING_API_KEY wingrunr21/alpine-heroku-cli apps:destroy --app $FEATURE_APP --confirm $FEATURE_APP
+    - echo "FEATURE application at server https://$FEATURE_APP.herokuapp.com/ is destroyed"
+  when: manual
+
 
 test_feature:
   image: alpine
